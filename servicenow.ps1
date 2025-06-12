@@ -1,7 +1,7 @@
 ﻿# Define variables
-$instance = "genpactllcdmo15" # e.g., "dev12345"
-$username = "ravi.chaganti"
-$password = "G@ecis11a"
+$instance = "" # e.g., "dev12345"
+$username = ""
+$password = ""
 $table = "incident" # The table you want to query, e.g., "incident" for incidents
 $assignmentGroup = "Development Team Group" # e.g., "Network Support"
 
