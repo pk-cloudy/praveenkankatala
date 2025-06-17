@@ -142,6 +142,19 @@ resource "azurerm_role_assignment" "role_assignment" {
 
 ### `for_each` block:
 
+# Understanding Terraform’s `for_each` Iteration Variables
+
+Whenever you use a `for_each` on a resource, Terraform exposes two handy iteration variables inside that block:
+
+- **`each.key`** — the map key for the current iteration  
+- **`each.value`** — the map value for the current iteration  
+
+---
+
+## Example `for_each` Map
+
+In your case, you built your `for_each` map like this:
+
 ```hcl
 for_each = {
   for ra in local.role_assignments :
@@ -149,8 +162,57 @@ for_each = {
 }
 ```
 
-- **Key** = `"${ra.service}-${ra.role}"` (e.g., "redis-Reader")  
-- **Value** = whole `ra` object
+This comprehension does two things:
+
+1. **Key**  
+   ```hcl
+   "${ra.service}-${ra.role}"
+   ```  
+   — a string combining the service name and role name, e.g. `"redis-Reader"`.
+
+2. **Value**  
+   ```hcl
+   ra
+   ```  
+   — the entire object from `local.role_assignments`, e.g.:
+
+   ```hcl
+   {
+     service = "redis"
+     role    = "Reader"
+   }
+   ```
+
+---
+
+## What Happens During Each Iteration
+
+For each entry in the map:
+
+1. **`each.key`**  
+   Might be:  
+   ```hcl
+   "redis-Reader"
+   ```
+
+2. **`each.value`**  
+   Is the object:  
+   ```hcl
+   {
+     service = "redis"
+     role    = "Reader"
+   }
+   ```
+
+---
+
+## Accessing the Role
+
+Because `each.value` holds an object with a field called `role`, you can refer to it directly:
+
+```hcl
+role_definition_name = each.value.role
+```
 
 ### Why a map?
 
