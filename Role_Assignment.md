@@ -252,6 +252,60 @@ Using `service-role` ensures:
   ...
 }
 ```
+---
+---
+### Understanding lookup
+In Terraform, the built-in `lookup()` function is used to safely retrieve a value from a map.
+
+### Syntax
+
+```hcl
+lookup(map, key, default)
+```
+
+This function takes **three arguments**:
+
+---
+
+### 1. `map`
+
+The map you want to search.  
+In your case, it's `local.resource_scopes`, which might look like this:
+
+```hcl
+{
+  postgresql = azurerm_postgresql_flexible_server.postgres.id
+  redis      = azurerm_redis_cache.redis.id
+  # ...more services
+}
+```
+
+---
+
+### 2. `key`
+
+The key (string) you’re trying to look up in the map.  
+Here, it's:
+
+```hcl
+each.value.service
+```
+
+Which refers to the name of the current service in your `for_each` loop, such as `"redis"` or `"frontend"`.
+
+---
+
+### 3. `default`
+
+This is the value Terraform will return **if the key isn’t found** in the map.  
+For example:
+
+```hcl
+lookup(local.resource_scopes, each.value.service, null)
+```
+
+- If the key **is found**, it returns the corresponding resource ID.
+- If the key **is not found**, it returns `null` instead of throwing an error.
 
 ---
 
