@@ -1,0 +1,105 @@
+---
+- name: Manage AD users in a specified domain (with cross-domain support)
+  hosts: ADservers
+  gather_facts: no
+  ignore_errors: yes
+ 
+  pre_tasks:
+    - name: Import Active Directory module
+      win_shell: Import-Module -Name ActiveDirectory
+ 
+  tasks:
+    - name: Display domain and DN being used
+      debug:
+        msg: "Using domain {{ ad_domain }} with base DN {{ ad_base_dn }}"
+ 
+    - name: Ensure ADWS is running
+      win_service:
+        name: ADWS
+        state: started
+ 
+    - name: Validate Service Request number
+      fail:
+        msg: "Request Number is INVALID"
+      when: ("RITM" not in vm_srno and "REQ" not in vm_srno) or (vm_srno | length < 9)
+ 
+    - name: Check if AD group exists
+      win_shell: >
+        Get-ADGroup -Filter "Name -eq '{{ var_grp }}'" -Server mocr-nt1.otsuka.com
+      register: group_result
+ 
+    - name: Show group lookup result
+      debug:
+        var: group_result
+ 
+    - name: Get user DN and resolve SID from source domain
+      win_shell: |
+            (Get-ADUser -Filter {samaccountname -eq '{{ var_usrname }}'} -Server '{{ ad_domain }}' -SearchScope Subtree).DistinguishedName
+      register: user_info
+ 
+    - name: Fail if user was not found
+      fail:
+        msg: "User '{{ var_usrname }}' not found in domain '{{ ad_domain }}'"
+      when: user_info.stdout | trim == ""
+ 
+    - name: Show resolved user DN
+      debug:
+        msg: "User DN: {{ user_info.stdout }}"
+ 
+    - name: Add user to cross-domain
+      win_shell: |
+        $var = Get-ADUser -Filter {samaccountname -eq "{{ var_usrname }}"} -Server "{{ ad_domain }}" -SearchScope Subtree
+        Add-ADGroupMember -identity "{{ var_grp }}" -Members $var
+      when: var_optn == "add"
+      register: user_result
+ 
+    - name: Remove user from AD group (cross-domain safe)
+      win_shell: |
+        $user = Get-ADUser -Filter {samaccountname -eq "{{ var_usrname }}"} -Server "{{ ad_domain }}" -SearchScope Subtree 
+        Remove-ADGroupMember -identity "{{ var_grp }}" -Members $user -Confirm:$false
+      when: var_optn == "remove"
+      register: user_result
+ 
+    - name: Show result of group modification
+      debug:
+        var: user_result
+ 
+    - name: Prepare email content
+      set_fact:
+        email_subject: "AD Group Addition/Removal Notification for {{ var_usrname }}"
+        email_body: |
+<html>
+<body>
+<h2>Active Directory User Management Report</h2>
+<table border="1" cellpadding="5" cellspacing="0">
+<tr><th>User</th><td>{{ var_usrname }}</td></tr>
+<tr><th>Group</th><td>{{ var_grp }}</td></tr>
+<tr><th>Domain</th><td>{{ ad_domain }}</td></tr>
+<tr><th>Action</th><td>{{ var_optn | title }}</td></tr>
+<tr><td><b>Executed By</b></td><td>{{ tower_user_email }}</td></tr>
+<tr><th><b>Status</b></th>
+<td>
+                "color: {% if user_result is defined and user_result.rc == 0 %}green{% else %}red{% endif %};">
+                  {% if user_result is defined and user_result.rc == 0 %}Success{% else %}Failed{% endif %}
+</span>
+</td>
+</tr>
+</table>
+</body>
+</html>
+ 
+    - name: Send email report
+      mail:
+        host: outlook.com
+        port: 25
+        to:
+          - "{{ tower_user_email }}"
+          - "@outlook.com"
+          - "@outlook.com"
+        from: test@outlook.com
+        subject: "{{ email_subject }}"
+        subtype: html
+        body: "{{ email_body }}"
+      delegate_to: localhost
+      run_once: true
+ 
