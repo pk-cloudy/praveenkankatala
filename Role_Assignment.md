@@ -71,13 +71,9 @@ role_assignments = flatten([
 
 - **Step 3: Flatten**  
   Flattens the nested lists into a single list of objects.
-Now we take those nested lists and merge them into one single list:
+  Now we take those nested lists and merge them into one single list:
 
-```hcl
-locals {
-  role_assignments = flatten(local.nested_role_lists)
-}
-Before flatten
+- Before flatten
 
 ```hcl
 [
@@ -85,7 +81,8 @@ Before flatten
   [ {service="redis",      role="Reader"},                {service="redis",      role="Cache Contributor"}    ],
   [ {service="frontend",   role="Reader"} ]
 ]
-After flatten
+```
+- After flatten
 
 ```hcl
 [
@@ -95,7 +92,7 @@ After flatten
   {service="redis",      role="Cache Contributor"},
   {service="frontend",   role="Reader"}
 ]
-
+```
 flatten concatenates all the inner lists end-to-end, giving you one big list of service/role objects that you can loop over in a single for_each.
 
 ---
