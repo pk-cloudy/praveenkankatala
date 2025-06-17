@@ -141,9 +141,6 @@ resource "azurerm_role_assignment" "role_assignment" {
 - `role`
 
 ### `for_each` block:
-
-# Understanding Terraform’s `for_each` Iteration Variables
-
 Whenever you use a `for_each` on a resource, Terraform exposes two handy iteration variables inside that block:
 
 - **`each.key`** — the map key for the current iteration  
