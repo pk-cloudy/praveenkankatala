@@ -222,6 +222,142 @@ resource "azurerm_user_assigned_identity" "service_identity" {
   - `postgresql-identity`
   - `redis-identity`
 
-- **Other fields:**
-  - `location`: Passed from variable
-  - `resource_group_name`: Passed from variable
+## Code in `locals.tf` (Resource Scopes)
+
+```hcl
+resource_scopes = {
+  postgresql            = azurerm_postgresql_flexible_server.postgres.id
+  redis                 = azurerm_redis_cache.redis.id
+  frontend              = azurerm_linux_web_app.frontend.id
+  backend               = azurerm_linux_web_app.backend.id
+  celery                = azurerm_linux_web_app.celery.id
+  storage               = azurerm_storage_account.azure_storage.id
+  keyvault              = azurerm_key_vault.key_vault.id
+  cognitive_search      = azurerm_search_service.cog_search.id
+  document_intelligence = azurerm_cognitive_account.form_recognizer.id
+  content_safety        = azurerm_cognitive_account.content_safety.id
+  app_gateway           = azurerm_application_gateway.app_gateway.id
+  ai_language           = azurerm_cognitive_account.ai_language.id
+  logicapp              = azurerm_logic_app_standard.logic_app.id
+}
+```
+
+---
+
+## Variables for Services and Role Mappings
+
+### `services`
+
+```hcl
+variable "services" {
+  description = "List of services requiring User Assigned Identities"
+  type        = list(string)
+  default     = [
+    "postgresql",
+    "redis",
+    "frontend",
+    "backend",
+    "celery",
+    "storage",
+    "keyvault",
+    "cognitive_search",
+    "document_intelligence",
+    "content_safety",
+    "app_gateway",
+    "ai_language",
+    "logicapp"
+  ]
+}
+```
+
+### `role_mappings`
+
+```hcl
+variable "role_mappings" {
+  description = "Mapping of services to roles"
+  type = map(list(string))
+  default = {
+    postgresql = [
+      "Cognitive Services OpenAI User",
+      "Log Analytics Reader",
+      "Reader",
+      "Website Contributor"
+    ],
+    redis = [
+      "Cognitive Services OpenAI User",
+      "Redis Cache Contributor",
+      "Log Analytics Reader",
+      "Reader",
+      "Website Contributor"
+    ],
+    frontend = [
+      "Cognitive Services OpenAI User",
+      "Log Analytics Reader",
+      "Reader",
+      "Website Contributor"
+    ],
+    backend = [
+      "Cognitive Services OpenAI User",
+      "Log Analytics Reader",
+      "Reader",
+      "Website Contributor"
+    ],
+    celery = [
+      "Cognitive Services OpenAI User",
+      "Log Analytics Reader",
+      "Reader",
+      "Website Contributor"
+    ],
+    storage = [
+      "Cognitive Services OpenAI User",
+      "Log Analytics Reader",
+      "Reader",
+      "Website Contributor"
+    ],
+    keyvault = [
+      "Cognitive Services OpenAI User",
+      "Log Analytics Reader",
+      "Reader",
+      "Website Contributor"
+    ],
+    cognitive_search = [
+      "Cognitive Services OpenAI User",
+      "Search Service Contributor",
+      "Log Analytics Reader",
+      "Reader",
+      "Website Contributor"
+    ],
+    document_intelligence = [
+      "Cognitive Services OpenAI User",
+      "Search Service Contributor",
+      "Log Analytics Reader",
+      "Reader",
+      "Website Contributor"
+    ],
+    content_safety = [
+      "Cognitive Services OpenAI User",
+      "Search Service Contributor",
+      "Log Analytics Reader",
+      "Reader",
+      "Website Contributor"
+    ],
+    app_gateway = [
+      "Cognitive Services OpenAI User",
+      "Log Analytics Reader",
+      "Reader",
+      "Website Contributor"
+    ],
+    ai_language = [
+      "Cognitive Services OpenAI User",
+      "Search Service Contributor",
+      "Log Analytics Reader",
+      "Reader",
+      "Website Contributor"
+    ],
+    logicapp = [
+      "Logic Apps Standard Developer (Preview)",
+      "Logic Apps Standard Contributor (Preview)"      
+    ] 
+  }
+}
+```
