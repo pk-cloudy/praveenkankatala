@@ -73,7 +73,7 @@ role_assignments = flatten([
   Flattens the nested lists into a single list of objects.
   Now we take those nested lists and merge them into one single list:
 
-- Before flatten
+ ## Before flatten
 
 ```hcl
 [
@@ -82,7 +82,7 @@ role_assignments = flatten([
   [ {service="frontend",   role="Reader"} ]
 ]
 ```
-- After flatten
+## After flatten
 
 ```hcl
 [
