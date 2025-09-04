@@ -1,9 +1,11 @@
 ## Introduction
-Hi, I'm **[Praveen Kankatala]**, a **Cloud & DevOps Engineer** passionate about building scalable, secure, and automated solutions.  
+Hi, I'm **Praveen Kankatala**, a **Cloud & DevOps Engineer** passionate about building scalable, secure, and automated solutions.  
 I specialize in designing and managing **cloud infrastructure**, implementing **CI/CD pipelines**, automating workflows, and ensuring high availability and performance across applications.
+I have hands-on experience in **AWS**, **Azure**, **Terraform**, **Kubernetes**, **Docker**, and **DevOps toolchains** like **Jenkins**, **Ansible**, and **GitHub Actions**, I focus on creating efficient, reliable, and cost-effective solutions.
 
-With hands-on experience in **AWS**, **Azure**, **Terraform**, **Kubernetes**, **Docker**, and **DevOps toolchains** like **Jenkins**, **Ansible**, and **GitHub Actions**, I focus on creating efficient, reliable, and cost-effective solutions.
+---
 
+## Skills ##
 - **Cloud Platform**: [AWS / Azure]
 - **Infrastructure as Code**: Terraform / ARM Templates
 - **CI/CD**: Jenkins / GitHub Actions / Azure DevOps Pipelines
@@ -11,9 +13,10 @@ With hands-on experience in **AWS**, **Azure**, **Terraform**, **Kubernetes**, *
 - **Monitoring & Logging**: Prometheus / Grafana / ELK / CloudWatch
 - **Security & Compliance**: IAM, GuardDuty, Key Vault / KMS
 
-## Skills Demonstrated
+---
+
+## Activities ##
 - Infrastructure provisioning with **Terraform / ARM**
-- Secure and optimized cloud architecture design
 - CI/CD automation and deployment pipelines
 - Dockerized microservices and Kubernetes orchestration
 - Monitoring, logging, and alerting integration
@@ -26,7 +29,8 @@ With hands-on experience in **AWS**, **Azure**, **Terraform**, **Kubernetes**, *
 - Integrate advanced monitoring dashboards
 - Add serverless architecture components
 
----
+--
 
 ## Contact
-📧 **Email**: [your.email@example.com] 
+📧 **Email**: [praveenkankatala1@gmail.com] 
+
