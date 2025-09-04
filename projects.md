@@ -24,13 +24,7 @@ I have hands-on experience in **AWS**, **Azure**, **Terraform**, **Kubernetes**,
 
 ---
 
-## Future Enhancements
-- Automate multi-cloud deployments
-- Integrate advanced monitoring dashboards
-- Add serverless architecture components
-
---
-
 ## Contact
 📧 **Email**: [praveenkankatala1@gmail.com] 
+
 
