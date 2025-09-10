@@ -14,7 +14,7 @@ Here’s the detailed `README.md`:
 ```markdown
 🚀 Jenkins CI/CD Pipeline with Maven, Nexus, Tomcat & Slack Notifications
 
-This project demonstrates a **Continuous Integration and Continuous Deployment (CI/CD)** pipeline using **Jenkins**, **Maven**, **Nexus Repository**, **Apache Tomcat**, and **Slack** for team notifications.
+This project demonstrates a Continuous Integration and Continuous Deployment (CI/CD) pipeline using Jenkins, Maven, Nexus Repository, Apache Tomcat, and Slack for team notifications.
 
 ---
 
@@ -22,12 +22,12 @@ This project demonstrates a **Continuous Integration and Continuous Deployment (
 
 The pipeline automates the following steps:
 
-1. Code Commit → Developer commits code to **GitHub**.
+1. Code Commit → Developer commits code to GitHub.
 2. Webhook Trigger → Jenkins automatically triggers the build.
-3. Code Build → Uses **Maven** to compile and package the project.
-4. Artifact Storage → Stores the **WAR** file in **Nexus Repository**.
-5. Deployment → Deploys the WAR file to **Tomcat Server**.
-6. Notification → Sends a deployment status message to a **Slack channel**.
+3. Code Build → Uses Maven to compile and package the project.
+4. Artifact Storage → Stores the WAR file in Nexus Repository.
+5. Deployment → Deploys the WAR file to Tomcat Server.
+6. Notification → Sends a deployment status message to a Slack channel.
 
 This ensures fast, reliable, and consistent delivery of software.
 
@@ -39,12 +39,12 @@ Before setting up this pipeline, ensure the following tools are installed and co
 
 | Tool / Service    | Purpose                                    | Required Version |
 |--------------------|----------------------------------------|------------------|
-| **Git**           | Version control for code               | Latest |
-| **Maven**         | Build and package the project          | 3.x or above |
-| **Nexus**         | Stores build artifacts (WAR/JAR)       | Latest |
-| **Jenkins**       | Automates CI/CD pipeline               | 2.x or above |
-| **Tomcat**        | Application deployment                 | 9.x or above |
-| **Slack Channel** | Notifies team about deployment status  | Any |
+| Git                | Version control for code               | Latest           |
+| Maven              | Build and package the project          | 3.x or above     |
+| Nexus              | Stores build artifacts (WAR/JAR)       | Latest           |
+| Jenkins            | Automates CI/CD pipeline               | 2.x or above     |
+| Tomcat             | Application deployment                 | 9.x or above     |
+| Slack Channel      | Notifies team about deployment status  | Any              |
 
 ---
 
@@ -157,8 +157,6 @@ pipeline {
     }
 }
 ```
-
----
 
 ## 🚀 Future Enhancements
 
