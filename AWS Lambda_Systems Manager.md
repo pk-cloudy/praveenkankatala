@@ -374,5 +374,475 @@ A: Not if you provision **VPC interface endpoints** for SSM/SSMMessages/EC2Messa
 
 ---
 
-**👍 You’re ready to run controlled, auditable maintenance against EC2—securely and repeatably.**
+# Terraform: EC2 + SSM Automation (Lambda + API Gateway)
+
+This README contains **copy-pasteable Terraform code blocks** to deploy:
+
+* 2x AWS Lambda functions (Python)
+
+  * `run-commands` → SSM `SendCommand` to an EC2 instance
+  * `start-association` → SSM `StartAssociationsOnce`
+* HTTP API (API Gateway v2) with **AWS\_IAM** auth
+* Least-privilege IAM roles/policies
+* CloudWatch access logs
+* (Optional) S3 for large SSM command outputs
+
+> The Lambda **Python** handlers are referenced but not included here (put them under `lambdas/run_commands/handler.py` and `lambdas/start_association/handler.py` as discussed).
+
+---
+
+## 📁 Folder structure
+
+```
+ec2-ssm-automation/
+├─ infra/                 # Terraform here
+│  ├─ backend.tf
+│  ├─ provider.tf
+│  ├─ variables.tf
+│  ├─ locals.tf
+│  ├─ iam.tf
+│  ├─ lambda.tf
+│  ├─ apigw.tf
+│  ├─ outputs.tf
+├─ lambdas/
+│  ├─ run_commands/
+│  │  └─ handler.py       # your Python code
+│  └─ start_association/
+│     └─ handler.py       # your Python code
+└─ README.md
+```
+
+---
+
+## 1) `backend.tf` (example S3 backend)
+
+```hcl
+terraform {
+  backend "s3" {
+    bucket         = "YOUR-TF-STATE-BUCKET"
+    key            = "ec2-ssm-automation/terraform.tfstate"
+    region         = "ap-south-1"
+    dynamodb_table = "YOUR-TF-LOCKS"
+    encrypt        = true
+  }
+}
+```
+
+---
+
+## 2) `provider.tf`
+
+```hcl
+terraform {
+  required_version = ">= 1.6.0"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 5.60"
+    }
+    archive = {
+      source  = "hashicorp/archive"
+      version = ">= 2.4.0"
+    }
+  }
+}
+
+provider "aws" {
+  region  = var.aws_region
+  profile = var.aws_profile
+}
+```
+
+---
+
+## 3) `variables.tf`
+
+```hcl
+variable "aws_region" {
+  type = string
+}
+
+variable "aws_profile" {
+  type    = string
+  default = null
+}
+
+variable "project" {
+  type = string
+}
+
+variable "environment" {
+  type = string
+}
+
+# Optional: S3 bucket where full SSM outputs will be stored
+variable "output_s3_bucket" {
+  type    = string
+  default = ""
+}
+```
+
+---
+
+## 4) `locals.tf`
+
+```hcl
+locals {
+  name_prefix = "${var.project}-${var.environment}"
+
+  tags = {
+    Project     = var.project
+    Environment = var.environment
+    ManagedBy   = "terraform"
+  }
+}
+```
+
+---
+
+## 5) `iam.tf` (least-privilege IAM)
+
+```hcl
+data "aws_caller_identity" "me" {}
+data "aws_region" "current" {}
+
+# ---------- Lambda execution role ----------
+data "aws_iam_policy_document" "lambda_assume" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "lambda_exec" {
+  name               = "${local.name_prefix}-lambda-exec"
+  assume_role_policy = data.aws_iam_policy_document.lambda_assume.json
+  tags               = local.tags
+}
+
+# CloudWatch Logs policy
+data "aws_iam_policy_document" "logs_access" {
+  statement {
+    actions   = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_policy" "lambda_logs" {
+  name   = "${local.name_prefix}-lambda-logs"
+  policy = data.aws_iam_policy_document.logs_access.json
+}
+
+# SSM least-privilege
+# Separate statements for document + instance ARNs (SendCommand requires both)
+data "aws_iam_policy_document" "ssm_least" {
+  # Allow SendCommand to the document
+  statement {
+    actions   = ["ssm:SendCommand"]
+    resources = ["arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.me.account_id}:document/AWS-RunShellScript"]
+  }
+
+  # Allow SendCommand to instances that carry a specific tag
+  statement {
+    actions   = ["ssm:SendCommand"]
+    resources = ["arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.me.account_id}:instance/*"]
+    condition {
+      test     = "StringEquals"
+      variable = "ssm:resourceTag/SSMRunAllowed"
+      values   = ["true"]
+    }
+  }
+
+  # Read individual command invocation results
+  statement {
+    actions   = ["ssm:GetCommandInvocation"]
+    resources = ["*"]
+  }
+
+  # Allow starting associations
+  statement {
+    actions   = ["ssm:StartAssociationsOnce", "ssm:DescribeAssociation"]
+    resources = ["arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.me.account_id}:association/*"]
+  }
+
+  # Optional S3 write for outputs
+  dynamic "statement" {
+    for_each = var.output_s3_bucket == "" ? [] : [1]
+    content {
+      actions = [
+        "s3:PutObject",
+        "s3:AbortMultipartUpload",
+        "s3:ListBucketMultipartUploads"
+      ]
+      resources = [
+        "arn:aws:s3:::${var.output_s3_bucket}",
+        "arn:aws:s3:::${var.output_s3_bucket}/*"
+      ]
+    }
+  }
+
+  # Describe instances to validate tags / existence
+  statement {
+    actions   = ["ec2:DescribeInstances"]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_policy" "lambda_ssm" {
+  name   = "${local.name_prefix}-lambda-ssm"
+  policy = data.aws_iam_policy_document.ssm_least.json
+}
+
+resource "aws_iam_role_policy_attachment" "attach_logs" {
+  role       = aws_iam_role.lambda_exec.name
+  policy_arn = aws_iam_policy.lambda_logs.arn
+}
+
+resource "aws_iam_role_policy_attachment" "attach_ssm" {
+  role       = aws_iam_role.lambda_exec.name
+  policy_arn = aws_iam_policy.lambda_ssm.arn
+}
+
+# ---------- EC2 instance role/profile (attach to target instances) ----------
+data "aws_iam_policy_document" "ec2_assume" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "ec2_ssm" {
+  name               = "${local.name_prefix}-ec2-ssm"
+  assume_role_policy = data.aws_iam_policy_document.ec2_assume.json
+  tags               = local.tags
+}
+
+resource "aws_iam_role_policy_attachment" "ec2_managed_core" {
+  role       = aws_iam_role.ec2_ssm.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+resource "aws_iam_instance_profile" "ec2_ssm" {
+  name = "${local.name_prefix}-ec2-ssm"
+  role = aws_iam_role.ec2_ssm.name
+}
+```
+
+---
+
+## 6) `lambda.tf` (packages from source dirs using `archive_file`)
+
+```hcl
+# Build zips from source folders
+data "archive_file" "run_commands_zip" {
+  type        = "zip"
+  source_dir  = "${path.module}/../lambdas/run_commands"
+  output_path = "${path.module}/../lambdas/run_commands.zip"
+}
+
+data "archive_file" "start_association_zip" {
+  type        = "zip"
+  source_dir  = "${path.module}/../lambdas/start_association"
+  output_path = "${path.module}/../lambdas/start_association.zip"
+}
+
+resource "aws_lambda_function" "run_commands" {
+  function_name = "${local.name_prefix}-run-commands"
+  role          = aws_iam_role.lambda_exec.arn
+  handler       = "handler.lambda_handler"
+  runtime       = "python3.12"
+
+  filename         = data.archive_file.run_commands_zip.output_path
+  source_code_hash = data.archive_file.run_commands_zip.output_base64sha256
+
+  timeout     = 120
+  memory_size = 512
+
+  environment {
+    variables = {
+      SSM_DOCUMENT      = "AWS-RunShellScript"
+      OUTPUT_S3_BUCKET  = var.output_s3_bucket
+      OUTPUT_S3_PREFIX  = "ssm/outputs"
+      REQUIRE_TAG_KEY   = "SSMRunAllowed"
+      REQUIRE_TAG_VALUE = "true"
+    }
+  }
+
+  tags = local.tags
+}
+
+resource "aws_lambda_function" "start_association" {
+  function_name = "${local.name_prefix}-start-association"
+  role          = aws_iam_role.lambda_exec.arn
+  handler       = "handler.lambda_handler"
+  runtime       = "python3.12"
+
+  filename         = data.archive_file.start_association_zip.output_path
+  source_code_hash = data.archive_file.start_association_zip.output_base64sha256
+
+  timeout     = 30
+  memory_size = 256
+  tags        = local.tags
+}
+```
+
+---
+
+## 7) `apigw.tf` (HTTP API v2 with IAM auth + access logs)
+
+```hcl
+resource "aws_apigatewayv2_api" "api" {
+  name          = "${local.name_prefix}-ec2-ssm-api"
+  protocol_type = "HTTP"
+  tags          = local.tags
+}
+
+resource "aws_cloudwatch_log_group" "api_access" {
+  name              = "/aws/apigw/${aws_apigatewayv2_api.api.name}"
+  retention_in_days = 14
+  tags              = local.tags
+}
+
+resource "aws_apigatewayv2_stage" "stage" {
+  api_id      = aws_apigatewayv2_api.api.id
+  name        = "$default"
+  auto_deploy = true
+
+  access_log_settings {
+    destination_arn = aws_cloudwatch_log_group.api_access.arn
+    format = jsonencode({
+      requestId  = "$context.requestId",
+      httpMethod = "$context.httpMethod",
+      path       = "$context.path",
+      status     = "$context.status",
+      ip         = "$context.identity.sourceIp"
+    })
+  }
+}
+
+resource "aws_apigatewayv2_integration" "run_commands" {
+  api_id                 = aws_apigatewayv2_api.api.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = aws_lambda_function.run_commands.invoke_arn
+  payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_integration" "start_association" {
+  api_id                 = aws_apigatewayv2_api.api.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = aws_lambda_function.start_association.invoke_arn
+  payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_route" "route_run" {
+  api_id              = aws_apigatewayv2_api.api.id
+  route_key           = "POST /run-commands"
+  target              = "integrations/${aws_apigatewayv2_integration.run_commands.id}"
+  authorization_type  = "AWS_IAM"
+}
+
+resource "aws_apigatewayv2_route" "route_assoc" {
+  api_id              = aws_apigatewayv2_api.api.id
+  route_key           = "POST /start-association"
+  target              = "integrations/${aws_apigatewayv2_integration.start_association.id}"
+  authorization_type  = "AWS_IAM"
+}
+
+# Allow API Gateway to invoke the Lambdas
+resource "aws_lambda_permission" "allow_apigw_run" {
+  statement_id  = "AllowAPIGWInvokeRun"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.run_commands.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.api.execution_arn}/*/*"
+}
+
+resource "aws_lambda_permission" "allow_apigw_assoc" {
+  statement_id  = "AllowAPIGWInvokeAssoc"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.start_association.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.api.execution_arn}/*/*"
+}
+```
+
+---
+
+## 8) `outputs.tf`
+
+```hcl
+output "api_endpoint" {
+  value = aws_apigatewayv2_api.api.api_endpoint
+}
+
+output "ec2_instance_profile_name" {
+  value = aws_iam_instance_profile.ec2_ssm.name
+}
+
+output "lambda_run_commands_name" {
+  value = aws_lambda_function.run_commands.function_name
+}
+
+output "lambda_start_association_name" {
+  value = aws_lambda_function.start_association.function_name
+}
+---
+
+## 🚀 Deploy
+
+```bash
+cd ec2-ssm-automation/infra
+terraform init
+terraform apply \
+  -var="aws_region=ap-south-1" \
+  -var="project=ec2-ssm" \
+  -var="environment=dev" \
+  -var="output_s3_bucket="
+```
+
+---
+
+## ✅ Prepare target EC2 instances
+
+* Attach instance profile output: `ec2_instance_profile_name` (policy: **AmazonSSMManagedInstanceCore**)
+* Ensure **SSM Agent** is online & network has access to SSM (internet or VPC interface endpoints for `ssm`, `ssmmessages`, `ec2messages`)
+* Add tag: `SSMRunAllowed = true` (or change the required tag in Lambda env/policy)
+
+---
+
+## 🔐 Authorizing callers to API
+
+The API routes use **AWS\_IAM**. Grant your callers permission like:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "InvokeSSMApi",
+      "Effect": "Allow",
+      "Action": "execute-api:Invoke",
+      "Resource": "arn:aws:execute-api:ap-south-1:<ACCOUNT-ID>:<API-ID>/*/*/*"
+    }
+  ]
+}
+```
+
+(Use the `api_endpoint` output to derive API-ID/region.)
+
+---
+
+### Notes
+
+* For **Windows** instances, switch the Lambda env `SSM_DOCUMENT` to `AWS-RunPowerShellScript`.
+* To store **full command outputs** in S3, set `output_s3_bucket` and ensure bucket exists.
+* For **multi-instance fan-out**, prefer SSM `Targets` + AWS Step Functions to aggregate results.
+
 
