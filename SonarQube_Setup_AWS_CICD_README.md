@@ -200,13 +200,4 @@ A **Quality Profile** defines coding standards and rules. It helps:
 
 After pipeline execution, your SonarQube dashboard should reflect test results and analysis:
 
-![SonarQube Dashboard](path/to/image)
-
 ---
-
-## 🏁 Summary
-
-✅ SonarQube improves code quality  
-✅ Integrated with AWS CodePipeline using CodeBuild  
-✅ Setup runs on EC2 with Java 11  
-✅ Visual reports in dashboard + pipeline fail if code quality fails  
