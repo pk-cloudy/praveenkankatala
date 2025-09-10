@@ -37,7 +37,7 @@ This ensures fast, reliable, and consistent delivery of software.
 
 Before setting up this pipeline, ensure the following tools are installed and configured:
 
-| Tool / Service    | Purpose                                    | Required Version |
+| Tool / Service     |                 Purpose                | Required Version |
 |--------------------|----------------------------------------|------------------|
 | Git                | Version control for code               | Latest           |
 | Maven              | Build and package the project          | 3.x or above     |
