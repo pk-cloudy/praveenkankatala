@@ -12,13 +12,13 @@ Here’s the detailed `README.md`:
 ---
 
 ```markdown
-# 🚀 Jenkins CI/CD Pipeline with Maven, Nexus, Tomcat & Slack Notifications
+🚀 Jenkins CI/CD Pipeline with Maven, Nexus, Tomcat & Slack Notifications
 
 This project demonstrates a **Continuous Integration and Continuous Deployment (CI/CD)** pipeline using **Jenkins**, **Maven**, **Nexus Repository**, **Apache Tomcat**, and **Slack** for team notifications.
 
 ---
 
-## 📌 Overview
+📌 Overview
 
 The pipeline automates the following steps:
 
