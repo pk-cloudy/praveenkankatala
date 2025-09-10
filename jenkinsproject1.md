@@ -22,18 +22,18 @@ This project demonstrates a **Continuous Integration and Continuous Deployment (
 
 The pipeline automates the following steps:
 
-1. **Code Commit** → Developer commits code to **GitHub**.
-2. **Webhook Trigger** → Jenkins automatically triggers the build.
-3. **Code Build** → Uses **Maven** to compile and package the project.
-4. **Artifact Storage** → Stores the **WAR** file in **Nexus Repository**.
-5. **Deployment** → Deploys the WAR file to **Tomcat Server**.
-6. **Notification** → Sends a deployment status message to a **Slack channel**.
+1. Code Commit → Developer commits code to **GitHub**.
+2. Webhook Trigger → Jenkins automatically triggers the build.
+3. Code Build → Uses **Maven** to compile and package the project.
+4. Artifact Storage → Stores the **WAR** file in **Nexus Repository**.
+5. Deployment → Deploys the WAR file to **Tomcat Server**.
+6. Notification → Sends a deployment status message to a **Slack channel**.
 
-This ensures **fast**, **reliable**, and **consistent** delivery of software.
+This ensures fast, reliable, and consistent delivery of software.
 
 ---
 
-## 🛠️ Prerequisites
+🛠️ Prerequisites
 
 Before setting up this pipeline, ensure the following tools are installed and configured:
 
@@ -48,7 +48,7 @@ Before setting up this pipeline, ensure the following tools are installed and co
 
 ---
 
-## 📂 Folder Structure
+📂 Folder Structure
 
 ```
 
@@ -62,22 +62,22 @@ jenkins-ci-cd-pipeline/
 
 ---
 
-## 🔄 Pipeline Workflow
+🔄 Pipeline Workflow
 
-### **Step 1 — Developer Commits Code**
-- A developer writes code and **pushes it to GitHub**.
-- This triggers a **webhook** that notifies Jenkins.
+### Step 1 — Developer Commits Code
+- A developer writes code and pushes it to GitHub.
+- This triggers a webhook that notifies Jenkins.
 
 ---
 
-### **Step 2 — Jenkins Triggers Pipeline**
+### Step 2 — Jenkins Triggers Pipeline
 - Jenkins fetches the latest code using `git clone`.
-- A **Jenkinsfile** defines the stages of the pipeline.
+- A Jenkinsfile defines the stages of the pipeline.
 
 ---
 
-### **Step 3 — Maven Build**
-- Jenkins uses **Maven** to:
+### **Step 3 — Maven Build
+- Jenkins uses Maven to:
   - Compile the project.
   - Run unit tests.
   - Package the application into a **WAR** file.
