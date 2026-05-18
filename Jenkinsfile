@@ -4,7 +4,7 @@ pipeline {
 		nodejs 'NodeJS'
 	}
 	environment {
-		SONAR_PROJECT_KEY = 'complete-cicd-02'
+		SONAR_PROJECT_KEY = 'sonar-cicd'
 		SONAR_SCANNER_HOME = tool 'SonarQubeScanner'
 		JOB_NAME_NOW = 'cicd02'
 		ECR_REPO = 'iquantawsrepo'
@@ -28,14 +28,14 @@ pipeline {
 		}
 		stage('SonarQube Analysis'){
 			steps {
-				withCredentials([string(credentialsId: 'complete-cicd-02-token', variable: 'SONAR_TOKEN')]) {
+				withCredentials([string(credentialsId: 'sonar-cicd', variable: 'SONAR_TOKEN')]) {
     					
 					withSonarQubeEnv('SonarQube') {
     						sh """
 						${SONAR_SCANNER_HOME}/bin/sonar-scanner \
 						-Dsonar.projectKey=${SONAR_PROJECT_KEY} \
 						-Dsonar.sources=. \
-						-Dsonar.host.url=http://sonarqube-dind:9000 \
+						-Dsonar.host.url=http://localhost:9000 \
 						-Dsonar.login=${SONAR_TOKEN}
 						"""
 					}
