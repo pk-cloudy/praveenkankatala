@@ -22,7 +22,6 @@ DevOps Engineer specializing in cloud infrastructure, automation, and end-to-end
 - ☁️ Deep hands-on with **AWS** (EC2, Lambda, EKS, S3, IAM, CloudWatch, MGN, Bedrock, Comprehend) and **Azure** (App Services, Functions, API Management, App Gateway)
 - 🤖 Building **MLOps/AIOps** automation, generative-AI services, and secure content governance with Bedrock + Guardrails
 - 📈 Reduced manual provisioning errors by **70%** via Terraform IaC; reduced deployment time by **70%** via integrated CI/CD pipelines
-- 📫 **praveenkankatala1@gmail.com** · ☎️ +91 9492228294
 
 ---
 
@@ -99,16 +98,6 @@ DevOps Engineer specializing in cloud infrastructure, automation, and end-to-end
 
 ---
 
-## 💼 Experience
-
-**🏢 Genpact** — *Lead Associate (AWS DevOps Engineer)* · *Apr 2022 – Present*
-Servicing **MedPro** and **FIS**. AWS infrastructure design (EC2, Lambda, API Gateway, EKS, S3, EBS, IAM, SNS, SQS, EFS, CloudWatch, CloudTrail, Route 53, MGN), Terraform IaC, Jenkins/Azure DevOps CI/CD, Docker, Kubernetes, Ansible AAP patching, Amazon Bedrock/Comprehend/Guardrails, Dynatrace + CloudWatch observability, MLOps/AIOps automation.
-
-**🏢 RLabs Enterprise Services Ltd** — *Software Engineer (Azure DevOps)* · *Aug 2021 – Mar 2022*
-Servicing **Accenture**. Azure infrastructure with Terraform — App Services, Logic Apps, PostgreSQL, Azure Functions, API Management, Application Gateway. Private Endpoint + VNet integration, deployment slots for zero-downtime releases, 24×7 operational support.
-
----
-
 ## 🎓 Certifications
 
 <p>
@@ -116,14 +105,6 @@ Servicing **Accenture**. Azure infrastructure with Terraform — App Services, L
   <img src="https://img.shields.io/badge/AWS_Certified-Solutions_Architect_Associate-FF9900?style=for-the-badge&logo=amazonaws&logoColor=white" />
   <img src="https://img.shields.io/badge/Microsoft-Azure_Fundamentals_(AZ--900)-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white" />
 </p>
-
----
-
-## 🎓 Education
-
-- **MBA** — Bhimavaram Institute of Engineering & Technology *(2019 – 2022)*
-- **B.Tech, Mechanical Engineering** — Bonam Venkata Chalamayya Engineering College *(2014 – 2017)*
-- **Diploma, Mechanical Engineering** — Swarnandhra Institute of Engineering and Technology *(2011 – 2014)*
 
 ---
 
