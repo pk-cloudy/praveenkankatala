@@ -10,9 +10,6 @@ pipeline {
 		ECR_REPO = 'test'
 		IMAGE_TAG = 'latest'
 		ECR_REGISTRY = '203510516855.dkr.ecr.us-east-1.amazonaws.com'
-		ECS_CLUSTER = 'iquant-ecs'
-		ECS_SERVICE = 'iquant-ecs-svc'
-		ALB_TARGET_GROUP_ARN = 'ecs-iquant-svc-tg'
 	}
 	stages {
 		stage('GitHub'){
