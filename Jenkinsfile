@@ -12,6 +12,14 @@ pipeline {
 		ECR_REGISTRY = '203510516855.dkr.ecr.us-east-1.amazonaws.com'
 	}
 	stages {
+		stage('Check') {
+            steps {
+               bat 'docker --version'
+               bat 'trivy --version'
+               bat 'aws --version'
+              bat 'node --version'
+            }
+        }
 		stage('GitHub'){
 			steps {
 				git branch: 'jenkins-sonarqube-trivy-ecs-alb', credentialsId: 'jenkins', url: 'https://github.com/pk-cloudy/praveenkankatala.git'
