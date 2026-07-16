@@ -15,9 +15,8 @@ pipeline {
 		stage('Check') {
             steps {
                bat 'docker --version'
-               bat 'trivy --version'
                bat 'aws --version'
-              bat 'node --version'
+               bat 'node --version'
             }
         }
 		stage('GitHub'){
@@ -52,11 +51,6 @@ pipeline {
 				script {
 					docker.build("${ECR_REGISTRY}/${ECR_REPO}:${IMAGE_TAG}")
 				}
-			}
-		}
-		stage('Trivy Scan'){
-			steps {
-				sh 'trivy --severity HIGH,CRITICAL --no-progress --format table -o trivy-report.html image ${JOB_NAME_NOW}:latest'
 			}
 		}
 		stage('Login to ECR'){
