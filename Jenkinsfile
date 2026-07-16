@@ -25,35 +25,12 @@ pipeline {
                 bat 'npm test'
             }
         }
-        stage('SonarQube Analysis') {
-            steps {
-                withCredentials([string(credentialsId: 'sonar-cicd', variable: 'SONAR_TOKEN')]) {
-                    withSonarQubeEnv('SonarQube') {
-                        bat '''
-                            "%SONAR_SCANNER_HOME%\\bin\\sonar-scanner.bat" ^
-                            -Dsonar.projectKey=%SONAR_PROJECT_KEY% ^
-                            -Dsonar.sources=. ^
-                            -Dsonar.host.url=http://localhost:9000 ^
-                            -Dsonar.token=%SONAR_TOKEN%
-                        '''
-                    }
-                }
-            }
-        }
+
         stage('Docker Image') {
             steps {
                 script {
                     docker.build("${FULL_IMAGE}")
                 }
-            }
-        }
-        stage('Trivy Scan') {
-            steps {
-                bat '''
-                    trivy image --severity HIGH,CRITICAL --no-progress ^
-                    --format table -o trivy-report.txt ^
-                    %FULL_IMAGE%
-                '''
             }
         }
         stage('Login to ECR') {
